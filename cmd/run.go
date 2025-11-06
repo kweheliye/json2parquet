@@ -1,11 +1,11 @@
 package cmd
 
 import (
-	"json-pipeline/internal/pipeline"
-	"json-pipeline/pkg/utils"
 	"os"
 	"path/filepath"
 
+	"github.com/kweheliye/json2parquet/internal/pipeline"
+	"github.com/kweheliye/json2parquet/pkg/utils"
 	"github.com/spf13/cobra"
 )
 

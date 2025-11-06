@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	utils "json-pipeline/pkg"
 	"os"
 	"runtime/pprof"
 
+	utils "github.com/kweheliye/json2parquet/pkg"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )

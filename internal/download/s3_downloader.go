@@ -19,6 +19,6 @@ func NewS3Downloader(config *DownloadConfig) *S3Downloader {
 	}
 }
 func (d *S3Downloader) DownloadReader(fileURL string) (io.ReadCloser, error) {
-	log.Infof("[S3Downloader] Downloading from S3")
+	log.("[S3Downloader] Downloading from S3")
 	return nil, nil
 }

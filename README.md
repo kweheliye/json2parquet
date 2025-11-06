@@ -1,33 +1,24 @@
-# JSON Pipeline
+# json2parquet
 
-An **open-source Go tool** for processing massive structured datasets with streaming, filtering, and transformation, enabling efficient preparation of data for analytics and reporting.
+An **open-source Go tool** for processing massive structured datasets (e.g., Transparency in Coverage MRF files) with streaming, filtering, and transformation, enabling efficient preparation of data for analytics, data lakes, and graph database ingestion.
 
-Designed to handle massive datasets, from gigabytes to terabytes
+Designed to handle **datasets from gigabytes to terabytes**. The tool processes files in **5MB chunks**, streaming and converting data efficiently into **Parquet format**, enabling analytics workflows without loading the entire dataset into memory. On a 12-core machine, an 80GB dataset can be converted to Parquet in under 5 minutes.
 
-The tool processes files in **5MB chunks**, streaming and converting data efficiently into **Parquet format**, enabling analytics workflows without loading the entire dataset into memory. 
-On a 12-core machine, an 80GB dataset can be converted to Parquet in under 5 minutes.
-
-The tool also supports **deeply nested JSON files**, allowing you to filter, flatten, and transform complex structures into analytics-ready formats.
+Supports **deeply nested JSON/NDJSON files**, allowing filtering, flattening, and transformation of complex structures into analytics-ready formats.
 
 ---
 
 ## Key Features
 
-### Implemented Features
-- ✅ Stream large structured datasets efficiently for analytics
-- ✅ Convert JSON/NDJSON input to **Parquet format**
-- ✅ Handle gzip-compressed files automatically
-- ✅ Chunked processing (default 5MB parts) for memory efficiency
-- ✅ Filter records by field/value to extract relevant data
+- ✅ Stream large JSON/NDJSON datasets efficiently
+- ✅ Convert input to **Parquet format** for analytics and data lakes
+- ✅ Read and write **gzip-compressed files** automatically
+- ✅ Filter records by field/value (e.g., subset of CPT/HCPCS codes)
+- ✅ Filter providers with pricing data, dropping extraneous records
 - ✅ Flatten and transform **deeply nested JSON structures**
 - ✅ Parallel processing using worker pool for chunked data
-
-### Planned Features
-- ⏳ Support advanced filtering and expressions
-- ⏳ Schema-based transformations
-- ⏳ Additional output formats: CSV, Avro
-- ⏳ Cloud input sources: S3, GCS, HTTP URLs
-- ⏳ Parallel & distributed processing for high performance
+- ✅ Read from HTTP, S3, GCS; write to S3, GCS
+- ✅ Output schema optimized for **graph database ingestion**
 
 ---
 
@@ -35,9 +26,9 @@ The tool also supports **deeply nested JSON files**, allowing you to filter, fla
 
 ### Install
 ```bash
-git clone https://github.com/yourusername/json-pipeline.git
-cd json-pipeline
-go build -o json-pipeline .
+git clone https://github.com/yourusername/json2parquet.git
+cd json2parquet
+go build -o json2parquet .
 ```
 
 ### Usage
@@ -49,45 +40,15 @@ go build -o json-pipeline .
   --memprofile mem.prof
 ```
 
-## Example
-
-**Input (deep_nested.json):**
-```json
-{
-  "id": 1,
-  "status": "active",
-  "details": {
-    "score": 90,
-    "preferences": {
-      "color": "blue",
-      "food": "pizza"
-    }
-  }
-}
-```
 
 **Command:**
 ```bash
- ./json-pipeline run \                                                   
-  --input data/example1.json \
-  --output out.parquet \
-  --cpuprofile cpu.prof \
-  --memprofile mem.prof
+ ./json2parquet run \
+  --input example.json \
+  --codes ./cpt-codes.csv \
+  --output out.parquet
 ```
 
-**Output:**
-- Parquet file with flattened fields: `id`, `status`, `details.score`, `details.preferences.color`, `details.preferences.food`
-
-
-**Analyzing the profiles**
-
-Requires Graphviz installed (go tool pprof -http=:8080 cpu.prof)
-
-- go tool pprof cpu.prof
-- (pprof) top
-- (pprof) list main
-- (pprof) web   
----
 
 ## Roadmap
 - [ ] Configuration file support (YAML/TOML)
