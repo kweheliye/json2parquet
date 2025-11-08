@@ -2,30 +2,33 @@ package pipeline
 
 import (
 	"io"
-	"json-pipeline/internal/download"
-	"json-pipeline/pkg/utils"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/kweheliye/json2parquet/internal/downloader"
+	"github.com/kweheliye/json2parquet/internal/parse"
+	"github.com/kweheliye/json2parquet/internal/split"
+	"github.com/kweheliye/json2parquet/utils"
 )
 
 // Step interface
 type Step interface {
 	Name() string
-	Run() error
+	Run()
 }
 
 type DownloadStep struct {
-	InputPath  string
+	URL        string
 	OutputPath string
 }
 
-func (s *DownloadStep) Run() error {
-	log.Infof("[DownloadStep] DownloadStep file: %s → %s", s.InputPath, s.OutputPath)
+func (s *DownloadStep) Run() {
+	log.Infof("[DownloadStep] DownloadStep file: %s → %s", s.URL, s.OutputPath)
 
 	o := filepath.Dir(s.OutputPath)
 
-	config := &download.DownloadConfig{
+	config := &downloader.DownloadConfig{
 		ChunkSize:  1024 * 1024 * 50, // 50MB chunks
 		Timeout:    2 * time.Minute,  // 2 minute timeout
 		MaxRetries: 5,                // 5 retry attempts
@@ -34,10 +37,10 @@ func (s *DownloadStep) Run() error {
 	err := os.MkdirAll(o, 0o755)
 	utils.ExitOnError(err)
 
-	d, err := download.DownloaderFactory(s.InputPath, config)
+	d, err := downloader.DownloaderFactory(s.URL, config)
 	utils.ExitOnError(err)
 
-	rd, err := d.DownloadReader(s.InputPath)
+	rd, err := d.DownloadReader(s.URL)
 	utils.ExitOnError(err)
 
 	defer rd.Close()
@@ -50,9 +53,8 @@ func (s *DownloadStep) Run() error {
 	n, err := io.Copy(wr, rd)
 	utils.ExitOnError(err)
 
-	log.Infof("Downloaded %d bytes from %s to %s", n, s.InputPath, s.OutputPath)
+	log.Infof("Downloaded %d bytes from %s to %s", n, s.URL, s.OutputPath)
 
-	return nil
 }
 
 func (s *DownloadStep) Name() string {
@@ -62,40 +64,42 @@ func (s *DownloadStep) Name() string {
 type SplitStep struct {
 	InputPath  string
 	OutputPath string
+	Overwrite  bool
 }
 
 func (s *SplitStep) Name() string {
 	return "Split"
 }
 
-func (s *SplitStep) Run() error {
+func (s *SplitStep) Run() {
 	log.Infof("[SplitStep] Splitting file: %s → %s", s.InputPath, s.OutputPath)
-	// TODO: implement chunk splitting
-	return nil
+	split.File(s.InputPath, s.OutputPath, s.Overwrite)
 }
 
 type ParseStep struct {
-	InputPath  string
-	OutputPath string
+	InputPath   string
+	OutputPath  string
+	ServiceFile string
+	PlanID      int64
 }
 
-func (p *ParseStep) Run() error {
+func (p *ParseStep) Run() {
 	log.Infof("[ParseStep] Parsing chunks from %s → %s\n", p.InputPath, p.OutputPath)
-	// TODO: implement JSON flatten + parquet write
-	return nil
+	parse.Parse(p.InputPath, p.OutputPath, p.PlanID, p.ServiceFile)
 }
 
 func (s *ParseStep) Name() string {
 	return "Parse"
 }
 
+// CleanStep removes the tmp directory used to store the split files
 type CleanStep struct {
 	TmpPath string
 }
 
-func (c *CleanStep) Run() error {
-	log.Infof("[CleanStep] Cleaning up temporary files in %s\n", c.TmpPath)
-	return nil
+func (s *CleanStep) Run() {
+	err := os.RemoveAll(s.TmpPath)
+	utils.ExitOnError(err)
 }
 
 func (s *CleanStep) Name() string {

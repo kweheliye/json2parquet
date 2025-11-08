@@ -1,15 +1,14 @@
-package download
+package downloader
 
 import (
 	"errors"
 	"fmt"
 	"io"
-	utils "json-pipeline/pkg"
 	"net/http"
 	"time"
 
 	"github.com/avast/retry-go/v4"
-
+	"github.com/kweheliye/json2parquet/utils"
 	"github.com/spf13/viper"
 )
 
@@ -53,7 +52,7 @@ func (d *HTTPDownloader) DownloadReader(fileURL string) (io.ReadCloser, error) {
 	if err != nil {
 		r.Body.Close()
 
-		return nil, fmt.Errorf("unable to download file from %s: %s", fileURL, errors.Unwrap(err))
+		return nil, fmt.Errorf("unable to downloader file from %s: %s", fileURL, errors.Unwrap(err))
 	}
 
 	if r.StatusCode != http.StatusOK {

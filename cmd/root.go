@@ -4,7 +4,7 @@ import (
 	"os"
 	"runtime/pprof"
 
-	utils "github.com/kweheliye/json2parquet/pkg"
+	"github.com/kweheliye/json2parquet/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )

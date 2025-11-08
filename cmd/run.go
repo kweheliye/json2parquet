@@ -1,11 +1,8 @@
 package cmd
 
 import (
-	"os"
-	"path/filepath"
-
 	"github.com/kweheliye/json2parquet/internal/pipeline"
-	"github.com/kweheliye/json2parquet/pkg/utils"
+	"github.com/kweheliye/json2parquet/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -23,6 +20,8 @@ var runCmd = &cobra.Command{
 func init() {
 	runCmd.Flags().StringVar(&inputPath, "input", "", "Input file path or URL")
 	runCmd.Flags().StringVar(&outputPath, "output", "", "Output Parquet file path")
+	runCmd.Flags().Bool("overwrite", false, "overwrite contents of output path if it exists")
+
 }
 
 func runPipeline(cmd *cobra.Command, args []string) {
@@ -33,28 +32,13 @@ func runPipeline(cmd *cobra.Command, args []string) {
 
 	log.Infof("Running pipeline with input: %s, output: %s", inputPath, outputPath)
 
-	tmpDir := os.TempDir()
-
-	steps := []pipeline.Step{
-		&pipeline.DownloadStep{
-			InputPath:  inputPath,
-			OutputPath: filepath.Join(tmpDir, "data.json"),
-		},
-		&pipeline.SplitStep{
-			InputPath:  inputPath,
-			OutputPath: filepath.Join(tmpDir, "split"),
-		},
-		&pipeline.ParseStep{
-			InputPath:  filepath.Join(tmpDir, "split"),
-			OutputPath: outputPath,
-		},
-		&pipeline.CleanStep{
-			TmpPath: tmpDir,
-		},
-	}
-
-	p := pipeline.New(steps...)
-	err := p.Run()
+	inputPath, err := cmd.Flags().GetString("input")
 	utils.ExitOnError(err)
+
+	outputPath, err := cmd.Flags().GetString("output")
+	utils.ExitOnError(err)
+
+	p := pipeline.NewParsePipeline(inputPath, outputPath, "", 0)
+	p.Run()
 
 }

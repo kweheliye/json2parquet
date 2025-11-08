@@ -1,12 +1,9 @@
 package utils
 
 import (
-	utils "json-pipeline/pkg"
 	"os"
 	"runtime"
 )
-
-var log = utils.GetLogger()
 
 func ExitOnError(err error) {
 	if err != nil {

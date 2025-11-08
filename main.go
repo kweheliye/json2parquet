@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"json-pipeline/cmd"
+
+	cmd "github.com/kweheliye/json2parquet/cmd"
 )
 
 func main() {
