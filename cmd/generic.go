@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/kweheliye/json2parquet/internal/parse"
+	"github.com/kweheliye/json2parquet/internal/pipeline"
 	"github.com/kweheliye/json2parquet/utils"
 	"github.com/spf13/cobra"
 )
@@ -38,9 +38,12 @@ func runGenericParse() {
 	log.Infof("Starting generic JSON to Parquet conversion")
 	log.Infof("Configuration file: %s", genericConfigFile)
 
-	if err := parse.ParseGeneric(genericConfigFile); err != nil {
-		log.Fatalf("Failed to parse JSON: %v", err)
+	// Build and run the Downloader → Parse → Clean pipeline for generic parsing
+	p, err := pipeline.NewGenericParsePipeline(genericConfigFile)
+	if err != nil {
+		log.Fatalf("Failed to build generic pipeline: %v", err)
 	}
+	p.Run()
 
 	log.Infof("Generic parsing completed successfully")
 }

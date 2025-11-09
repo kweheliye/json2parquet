@@ -3,7 +3,7 @@ source:
   type: url
   path: "https://cleanmyhouseservice-images.s3.us-east-1.amazonaws.com/nested_20.json"
 
-output_path: "data"
+output_path: "output"
 compression: "zstd"
 row_group: 10000
 

@@ -47,8 +47,8 @@ func loadParseConfig(configPath string) (*models.ParseConfig, error) {
 	return &config, nil
 }
 
-// Parse processes the JSON file according to configuration
-func (gp *GenericParser) Parse() error {
+// ParseFile processes the provided local JSON file according to configuration
+func (gp *GenericParser) ParseFile(localPath string) error {
 	// Initialize writers for each table
 	if err := gp.initializeWriters(); err != nil {
 		return fmt.Errorf("failed to initialize writers: %w", err)
@@ -56,8 +56,8 @@ func (gp *GenericParser) Parse() error {
 	defer gp.closeWriters()
 
 	// Read the JSON file
-	log.Infof("Reading JSON from: %s", gp.config.Source.Path)
-	data, err := os.ReadFile(gp.config.Source.Path)
+	log.Infof("Reading JSON from: %s", localPath)
+	data, err := os.ReadFile(localPath)
 	if err != nil {
 		return fmt.Errorf("failed to read source file: %w", err)
 	}
@@ -137,12 +137,7 @@ func (gp *GenericParser) processTable(tableConfig models.TableConfig, record map
 	log.Debugf("Processing table: %s with json_path: %s", tableConfig.Name, tableConfig.JSONPath)
 
 	// Build parent context including current record
-	fullContext := make(map[string]interface{})
-	if parentContext != nil {
-		for k, v := range parentContext {
-			fullContext[k] = v
-		}
-	}
+	fullContext := cloneMap(parentContext)
 	fullContext["__current__"] = record
 
 	// Handle root level table (empty json_path)
@@ -176,18 +171,8 @@ func (gp *GenericParser) processTable(tableConfig models.TableConfig, record map
 						return fmt.Errorf("failed to write record to %s: %w", tableConfig.Name, err)
 					}
 
-					// Prepare nested context: copy and set both plural and singular entity keys
-					nextCtx := make(map[string]interface{}, len(ctx)+2)
-					for k, v := range ctx {
-						nextCtx[k] = v
-					}
-					// Set by table name
-					nextCtx[tableConfig.Name] = itemMap
-					// Also set a naive singular form (trim trailing 's') to match parent_refs like "project", "task"
-					if strings.HasSuffix(tableConfig.Name, "s") && len(tableConfig.Name) > 1 {
-						singular := tableConfig.Name[:len(tableConfig.Name)-1]
-						nextCtx[singular] = itemMap
-					}
+					// Prepare nested context with current entity bound under table name and its singular form
+					nextCtx := contextWithEntity(ctx, tableConfig.Name, itemMap)
 
 					if err := gp.processRecord(itemMap, nextCtx, tableConfig.JSONPath); err != nil {
 						return err
@@ -207,25 +192,13 @@ func (gp *GenericParser) processTable(tableConfig models.TableConfig, record map
 				// Because when we encounter an array, idx has already advanced past the part that yielded this array.
 				itemCtx := ctx
 				if m, ok := item.(map[string]interface{}); ok {
-					var part string
+					part := ""
 					if idx > 0 {
 						part = pathParts[idx-1]
-					} else {
-						part = ""
-					}
-					// Clone ctx and set both plural and naive singular keys
-					nextCtx := make(map[string]interface{}, len(ctx)+2)
-					for k, v := range ctx {
-						nextCtx[k] = v
 					}
 					if part != "" {
-						nextCtx[part] = m
-						if strings.HasSuffix(part, "s") && len(part) > 1 {
-							singular := part[:len(part)-1]
-							nextCtx[singular] = m
-						}
+						itemCtx = contextWithEntity(ctx, part, m)
 					}
-					itemCtx = nextCtx
 				}
 				if err := traverse(item, idx, itemCtx); err != nil {
 					return err
@@ -408,5 +381,39 @@ func ParseGeneric(configPath string) error {
 		return err
 	}
 
-	return parser.Parse()
+	// Backward-compat: parse directly from configured source path (no downloading here)
+	return parser.ParseFile(parser.config.Source.Path)
+}
+
+// ---- internal helpers for context management ----
+// cloneMap creates a shallow copy of a map (nil-safe).
+func cloneMap(src map[string]interface{}) map[string]interface{} {
+	if src == nil {
+		return make(map[string]interface{})
+	}
+	dst := make(map[string]interface{}, len(src))
+	for k, v := range src {
+		dst[k] = v
+	}
+	return dst
+}
+
+// singularize returns a naive singular form by trimming a trailing 's'.
+func singularize(name string) string {
+	if strings.HasSuffix(name, "s") && len(name) > 1 {
+		return name[:len(name)-1]
+	}
+	return name
+}
+
+// contextWithEntity returns a cloned context with the entity bound under both
+// the provided plural name and its naive singular form.
+func contextWithEntity(ctx map[string]interface{}, pluralName string, entity map[string]interface{}) map[string]interface{} {
+	next := cloneMap(ctx)
+	next[pluralName] = entity
+	sg := singularize(pluralName)
+	if sg != pluralName {
+		next[sg] = entity
+	}
+	return next
 }

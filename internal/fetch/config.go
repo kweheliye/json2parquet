@@ -1,4 +1,4 @@
-package downloader
+package fetch
 
 import (
 	"time"
@@ -6,8 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-// DownloadConfig holds common configuration for all downloaders
-type DownloadConfig struct {
+// FetchConfig holds common configuration for all fetchers
+type FetchConfig struct {
 	ChunkSize  int64
 	Timeout    time.Duration
 	MaxRetries uint
@@ -15,9 +15,9 @@ type DownloadConfig struct {
 	AWSConfig  *aws.Config
 }
 
-// DefaultDownloadConfig returns default configuration
-func DefaultDownloadConfig() *DownloadConfig {
-	return &DownloadConfig{
+// DefaultFetchConfig returns default configuration
+func DefaultFetchConfig() *FetchConfig {
+	return &FetchConfig{
 		ChunkSize:  1024 * 1024 * 10, // 10MB
 		Timeout:    30 * time.Second,
 		MaxRetries: 3,
