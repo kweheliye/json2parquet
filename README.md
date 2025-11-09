@@ -147,13 +147,6 @@ For more tips, see the detailed guides in the project.
 
 ---
 
-## 📚 Additional Documentation
-
-- **`SOLUTION_SUMMARY.md`**: A deep dive into the architecture and solution.
-- **`QUICK_REFERENCE.md`**: A handy cheat sheet for configuration and commands.
-
----
-
 ## Contributing
 
 Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
