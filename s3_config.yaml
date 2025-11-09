@@ -1,7 +1,7 @@
 # Configuration for nested JSON from S3
 source:
   type: url
-  path: "https://cleanmyhouseservice-images.s3.us-east-1.amazonaws.com/nested_20.json"
+  path: "https://github.com/kweheliye/json2parquet/blob/main/data/nested_20.json"
 
 output_path: "output"
 compression: "zstd"

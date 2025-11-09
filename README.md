@@ -37,7 +37,7 @@ Create a `parse_config.yaml` file to define how your JSON should be processed.
 # parse_config.yaml
 source:
   type: file
-  path: "data/user_projects.json" # Path to your JSON file
+  path: "data/nested_20.json" # Path to your JSON file
 
 output_path: "output"             # Directory for Parquet files
 compression: "zstd"               # zstd, snappy, gzip, or none
