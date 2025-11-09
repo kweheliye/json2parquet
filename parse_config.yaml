@@ -1,0 +1,153 @@
+# Generic JSON to Parquet Configuration
+# This config defines how to extract and flatten nested JSON into multiple Parquet tables
+
+source:
+  type: file  # file, url, or s3
+  path: "data/user_projects.json"
+  root_array: ""  # Leave empty if root is an array, specify name if it's a field
+  type_field: ""  # Optional: field name that indicates entity type
+
+output_path: "output"
+compression: "zstd"  # zstd, snappy, gzip, or none
+row_group: 10000
+
+# Define tables to extract from nested JSON
+tables:
+  # Users table - root level
+  - name: "users"
+    description: "User information"
+    json_path: ""  # Empty means root level
+    fields:
+      - name: "user_id"
+        json_path: "user_id"
+        type: "int64"
+        parquet_type: "plain"
+        required: true
+      - name: "name"
+        json_path: "name"
+        type: "string"
+        parquet_type: "plain"
+        required: true
+      - name: "email"
+        json_path: "email"
+        type: "string"
+        parquet_type: "plain"
+        required: true
+
+  # Projects table - nested under users
+  - name: "projects"
+    description: "Projects associated with users"
+    json_path: "projects"  # Array path from root
+    fields:
+      - name: "project_id"
+        json_path: "project_id"
+        type: "string"
+        parquet_type: "plain"
+        required: true
+      - name: "title"
+        json_path: "title"
+        type: "string"
+        parquet_type: "plain"
+        required: true
+      - name: "status"
+        json_path: "status"
+        type: "string"
+        parquet_type: "enum"
+        required: true
+    parent_refs:
+      - entity_name: "user"
+        fields:
+          - name: "user_id"
+            json_path: "user_id"
+            type: "int64"
+            parquet_type: "plain"
+            required: true
+          - name: "user_name"
+            json_path: "name"
+            type: "string"
+            parquet_type: "plain"
+          - name: "user_email"
+            json_path: "email"
+            type: "string"
+            parquet_type: "plain"
+
+  # Tasks table - nested under projects
+  - name: "tasks"
+    description: "Tasks within projects"
+    json_path: "projects.tasks"  # Nested path: projects -> tasks
+    fields:
+      - name: "task_id"
+        json_path: "task_id"
+        type: "string"
+        parquet_type: "plain"
+        required: true
+      - name: "name"
+        json_path: "name"
+        type: "string"
+        parquet_type: "plain"
+        required: true
+      - name: "completed"
+        json_path: "completed"
+        type: "bool"
+        parquet_type: "plain"
+        required: true
+    parent_refs:
+      - entity_name: "user"
+        fields:
+          - name: "user_id"
+            json_path: "user_id"
+            type: "int64"
+            parquet_type: "plain"
+      - entity_name: "projects"
+        fields:
+          - name: "project_id"
+            json_path: "project_id"
+            type: "string"
+            parquet_type: "plain"
+
+  # Assignees table - nested under tasks
+  - name: "assignees"
+    description: "Task assignees"
+    json_path: "projects.tasks.assignees"  # Deeply nested path
+    fields:
+      - name: "assignee_id"
+        json_path: "id"
+        type: "int64"
+        parquet_type: "plain"
+        required: true
+      - name: "assignee_name"
+        json_path: "name"
+        type: "string"
+        parquet_type: "plain"
+        required: true
+    parent_refs:
+      - entity_name: "user"
+        fields:
+          - name: "user_id"
+            json_path: "user_id"
+            type: "int64"
+            parquet_type: "plain"
+          - name: "user_name"
+            json_path: "name"
+            type: "string"
+            parquet_type: "plain"
+      - entity_name: "project"
+        fields:
+          - name: "project_id"
+            json_path: "project_id"
+            type: "string"
+            parquet_type: "plain"
+          - name: "project_title"
+            json_path: "title"
+            type: "string"
+            parquet_type: "plain"
+      - entity_name: "task"
+        fields:
+          - name: "task_id"
+            json_path: "task_id"
+            type: "string"
+            parquet_type: "plain"
+          - name: "task_name"
+            json_path: "name"
+            type: "string"
+            parquet_type: "plain"

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/kweheliye/json2parquet/internal/downloader"
-	"github.com/kweheliye/json2parquet/internal/parse"
 	"github.com/kweheliye/json2parquet/internal/split"
 	"github.com/kweheliye/json2parquet/utils"
 )
@@ -85,7 +84,6 @@ type ParseStep struct {
 
 func (p *ParseStep) Run() {
 	log.Infof("[ParseStep] Parsing chunks from %s → %s\n", p.InputPath, p.OutputPath)
-	parse.Parse(p.InputPath, p.OutputPath, p.PlanID, p.ServiceFile)
 }
 
 func (s *ParseStep) Name() string {

@@ -15,7 +15,7 @@ import (
 type PqWriteCloser struct {
 	closer io.WriteCloser
 	ctx    context.Context
-	writer *parquet.GenericWriter[*models.Mrf]
+	writer *parquet.GenericWriter[*models.GenericRecord]
 	uri    string
 }
 
@@ -35,7 +35,7 @@ func (pwc *PqWriteCloser) Close() error {
 }
 
 // Write writes the given data to the underlying parquet.GenericWriter.
-func (pwc *PqWriteCloser) Write(rows []*models.Mrf) (int, error) {
+func (pwc *PqWriteCloser) Write(rows []*models.GenericRecord) (int, error) {
 	return pwc.writer.Write(rows)
 }
 
@@ -59,7 +59,7 @@ func NewPqWriter(ctx context.Context, uri string, maxRowsPerGroup int64) (*PqWri
 		return nil, err
 	}
 
-	writer := parquet.NewGenericWriter[*models.Mrf](w, &pqConfig)
+	writer := parquet.NewGenericWriter[*models.GenericRecord](w, &pqConfig)
 
 	return &PqWriteCloser{uri: uri, writer: writer, closer: w, ctx: ctx}, nil
 }

@@ -1,0 +1,116 @@
+# Configuration for nested JSON from S3
+source:
+  type: url
+  path: "https://cleanmyhouseservice-images.s3.us-east-1.amazonaws.com/nested_20.json"
+
+output_path: "data"
+compression: "zstd"
+row_group: 10000
+
+tables:
+  - name: "users"
+    description: "User information"
+    json_path: ""
+    fields:
+      - name: "user_id"
+        json_path: "user_id"
+        type: "int64"
+        parquet_type: "plain"
+        required: true
+      - name: "name"
+        json_path: "name"
+        type: "string"
+        parquet_type: "plain"
+      - name: "email"
+        json_path: "email"
+        type: "string"
+        parquet_type: "plain"
+
+  - name: "projects"
+    description: "Projects associated with users"
+    json_path: "projects"
+    fields:
+      - name: "project_id"
+        json_path: "project_id"
+        type: "string"
+        parquet_type: "plain"
+        required: true
+      - name: "title"
+        json_path: "title"
+        type: "string"
+        parquet_type: "plain"
+      - name: "status"
+        json_path: "status"
+        type: "string"
+        parquet_type: "enum"
+    parent_refs:
+      - entity_name: "user"
+        fields:
+          - name: "user_id"
+            json_path: "user_id"
+            type: "int64"
+            parquet_type: "plain"
+
+  - name: "tasks"
+    description: "Tasks within projects"
+    json_path: "projects.tasks"
+    fields:
+      - name: "task_id"
+        json_path: "task_id"
+        type: "string"
+        parquet_type: "plain"
+        required: true
+      - name: "name"
+        json_path: "name"
+        type: "string"
+        parquet_type: "plain"
+      - name: "completed"
+        json_path: "completed"
+        type: "bool"
+        parquet_type: "plain"
+    parent_refs:
+      - entity_name: "user"
+        fields:
+          - name: "user_id"
+            json_path: "user_id"
+            type: "int64"
+            parquet_type: "plain"
+      - entity_name: "project"
+        fields:
+          - name: "project_id"
+            json_path: "project_id"
+            type: "string"
+            parquet_type: "plain"
+
+  - name: "assignees"
+    description: "Task assignees"
+    json_path: "projects.tasks.assignees"
+    fields:
+      - name: "assignee_id"
+        json_path: "id"
+        type: "int64"
+        parquet_type: "plain"
+        required: true
+      - name: "assignee_name"
+        json_path: "name"
+        type: "string"
+        parquet_type: "plain"
+    parent_refs:
+      - entity_name: "user"
+        fields:
+          - name: "user_id"
+            json_path: "user_id"
+            type: "int64"
+            parquet_type: "plain"
+      - entity_name: "project"
+        fields:
+          - name: "project_id"
+            json_path: "project_id"
+            type: "string"
+            parquet_type: "plain"
+      - entity_name: "task"
+        fields:
+          - name: "task_id"
+            json_path: "task_id"
+            type: "string"
+            parquet_type: "plain"
